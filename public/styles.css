@@ -1,0 +1,58 @@
+/* Form table styling */
+table.form-table {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+/* Table row spacing for form */
+table.form-table tr {
+  margin-bottom: 15px;
+}
+
+/* Label styling for form fields */
+table.form-table td label {
+  font-weight: bold;
+  color: #333;
+  text-align: right;
+  padding-right: 15px;
+  font-size: 16px;
+}
+
+/* Input field styling in the form */
+table.form-table td input {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Submit button styling for forms */
+table.form-table button {
+  width: 100%;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+table.form-table button:hover {
+  background-color: #0056b3;
+}
+
+/* Spacing between form rows */
+table.form-table tr td {
+  padding: 10px;
+  vertical-align: middle;
+}

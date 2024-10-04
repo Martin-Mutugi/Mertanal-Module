@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Data to <%= table.replace('table', ' ') %></title>
+  <link rel="stylesheet" href="/styles.css"> <!-- Link to your CSS file -->
+</head>
+<body>
+  <h1>Submit Data to <%= table.replace('table', ' ') %></h1>
+
+  <!-- Form starts here -->
+  <form action="/<%= table %>" method="POST">
+    <table class="form-table">
+      <% fields.forEach(function(field) { %>
+        <tr>
+          <!-- Display the label for each field -->
+          <td><label for="<%= field %>"><%= field.replace(/([A-Z])/g, ' $1').toUpperCase() %>:</label></td>
+          
+          <!-- Display the corresponding input field -->
+          <td><input type="text" id="<%= field %>" name="<%= field %>" placeholder="Enter <%= field.replace(/([A-Z])/g, ' $1') %>" required></td>
+        </tr>
+      <% }) %>
+      <tr>
+        <td colspan="2" style="text-align: center;">
+          <button type="submit">Submit</button>
+        </td>
+      </tr>
+    </table>
+  </form>
+</body>
+</html>
