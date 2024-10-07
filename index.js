@@ -1,26 +1,31 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const path = require('path'); // Required for serving static files and views
+const path = require('path');
 const admin = require('firebase-admin');
 
-// Initialize Firebase Admin SDK
+// Initialize Firebase Admin SDK using environment variables
 admin.initializeApp({
-  credential: admin.credential.applicationDefault(), // Automatically uses Render's environment for Firebase credentials
-  databaseURL: process.env.FIREBASE_DB_URL // Make sure to set this environment variable in Render
+  credential: admin.credential.applicationDefault(),  // Uses GOOGLE_APPLICATION_CREDENTIALS
+  databaseURL: process.env.FIREBASE_DB_URL  // Firebase Realtime Database URL
 });
 
-const db = admin.firestore(); // Use Firestore as the database
+const db = admin.firestore();  // Firestore instance
 
 const app = express();
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views')); // Use absolute paths to avoid issues
-app.use(express.static(path.join(__dirname, 'public'))); // Serve static files (CSS, JS, etc.)
+app.set('views', path.join(__dirname, 'views'));  // Ensure views folder is correct
+app.use(express.static(path.join(__dirname, 'public')));  // Serve static files (CSS, images, etc.)
 
-// Define the tables and fields for each service
-const tableFields = {
+// Health check route for Render
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');  // Health check response for Render
+});
+
+// Define the services and their fields
+const services = {
   'PatientRegistration': ['PersonalNumber', 'FirstName', 'LastName', 'DateOfBirth', 'Gender', 'ContactNumber', 'Email', 'Address', 'Allergies', 'PreviousConditions', 'InsuranceProvider', 'InsuranceNumber', 'EmergencyContact', 'EmergencyContactNo', 'BloodGroup'],
   'MidwifeNotes': ['Time', 'MidwifeNote', 'DayNote', 'Discharge', 'MaternityReport'],
   'LaborProgressChart': ['PersonalNumber', 'Name', 'WomensClinic', 'TimeOfLabor', 'CervicalDilation', 'FetalHeartRate', 'Contractions'],
@@ -41,106 +46,66 @@ const tableFields = {
   'InfantHealthStatus': ['BirthWeight', 'HeadCircumference', 'ApgarScore', 'BirthStatus', 'Breastfeeding', 'FollowUp']
 };
 
-// -----------------------------------
-// Root route to display the homepage
-// -----------------------------------
+// -------------------------------------
+// Root Route - Display Homepage
+// -------------------------------------
 app.get('/', (req, res) => {
-  res.render('home');  // Renders the 'home.ejs' template
+  res.render('home');  // Renders 'home.ejs' for the homepage
 });
 
-// -----------------------------------
-// Route to display the Patient Registration form
-// -----------------------------------
-app.get('/PatientRegistration', (req, res) => {
-  const fields = tableFields['PatientRegistration'];
-  res.render('form', { table: 'PatientRegistration', fields, personalNumber: null, tables: Object.keys(tableFields) });
-});
-
-// -----------------------------------
-// Handle form submissions for Patient Registration
-// -----------------------------------
-app.post('/PatientRegistration', (req, res) => {
-  const data = req.body;
-  const personalNumber = data.PersonalNumber;  // Capture Personal Number from the form
-
-  // Check if Personal Number is provided
-  if (!personalNumber) {
-    return res.status(400).send('Personal Number is required');
-  }
-
-  // Store the patient registration data in Firebase
-  db.collection('PatientRegistration').add(data)
-    .then(() => {
-      // Redirect to the first service form (Midwife Notes), passing Personal Number in the query string
-      res.redirect(`/addData/MidwifeNotes?personalNumber=${personalNumber}`);
-    })
-    .catch((error) => {
-      console.error('Error submitting patient data:', error);
-      res.send('Error submitting patient data: ' + error);
-    });
-});
-
-// -----------------------------------
-// Render form for each service, with Personal Number prefilled
-// -----------------------------------
-app.get('/addData/:table', (req, res) => {
-  const table = req.params.table;
-  const personalNumber = req.query.personalNumber || null; // Personal Number will be passed in query string
-  const fields = tableFields[table];
+// -------------------------------------
+// Route to Display Form for Each Service
+// -------------------------------------
+app.get('/addData/:service', (req, res) => {
+  const service = req.params.service;
+  const personalNumber = req.query.personalNumber || null;
+  const fields = services[service];
 
   if (!fields) {
-    return res.status(404).send('Table not found');
+    return res.status(404).send('Service not found');
   }
 
-  // Render the form, passing personalNumber
-  res.render('form', { table, fields, personalNumber, tables: Object.keys(tableFields) });
+  res.render('form', { service, fields, personalNumber });  // Render form with fields and personal number
 });
 
-// -----------------------------------
-// Handle form submissions for each service, linking to the patient by Personal Number
-// -----------------------------------
-app.post('/addData/:table', (req, res) => {
-  const table = req.params.table;
+// -------------------------------------
+// Handle Form Submission for Each Service
+// -------------------------------------
+app.post('/addData/:service', (req, res) => {
+  const service = req.params.service;
   const data = req.body;
-  const personalNumber = req.body.personalNumber || req.query.personalNumber || null;
+  const personalNumber = data.personalNumber || req.query.personalNumber;
 
-  // Check if Personal Number is provided
   if (!personalNumber) {
     return res.status(400).send('Missing Personal Number');
   }
 
-  // Add Personal Number to the data object
+  // Add personal number to the data object
   data.personalNumber = personalNumber;
 
-  // Store the service data in Firebase
-  db.collection(table).add(data)
+  // Store data in Firestore
+  db.collection(service).add(data)
     .then(() => {
-      const serviceOrder = [
-        'MidwifeNotes', 'LaborProgressChart', 'DeliverySummary', 'LabResults', 'UltrasoundSummary',
-        'DischargeSummary', 'MaternityReport', 'FollowUpNotes', 'PrenatalCheckup', 'RoutineBloodTestResults',
-        'FollowUpBloodTestResults', 'Ultrasound', 'PregnancyOverview', 'DeliveryInformation',
-        'PostpartumHealthCheck', 'MaternalHealthSummary', 'InfantHealthStatus'
-      ];
+      const serviceOrder = Object.keys(services);  // Get the order of services
+      const currentIndex = serviceOrder.indexOf(service);
+      const nextService = serviceOrder[currentIndex + 1];
 
-      const nextServiceIndex = serviceOrder.indexOf(table) + 1;
-
-      // If there are more services, redirect to the next one
-      if (nextServiceIndex < serviceOrder.length) {
-        const nextService = serviceOrder[nextServiceIndex];
+      if (nextService) {
+        // Redirect to next service in the order
         res.redirect(`/addData/${nextService}?personalNumber=${personalNumber}`);
       } else {
-        // If no more services, redirect to the patient summary page
+        // If no more services, redirect to patient summary
         res.redirect(`/patientSummary/${personalNumber}`);
       }
     })
     .catch((error) => {
-      res.send('Error submitting data: ' + error);
+      res.status(500).send('Error submitting data: ' + error);
     });
 });
 
-// -----------------------------------
-// Route to show patient summary after completing all forms
-// -----------------------------------
+// -------------------------------------
+// Patient Summary Route - After All Forms Completed
+// -------------------------------------
 app.get('/patientSummary/:personalNumber', async (req, res) => {
   const personalNumber = req.params.personalNumber;
 
@@ -165,10 +130,10 @@ app.get('/patientSummary/:personalNumber', async (req, res) => {
   }
 });
 
-// -----------------------------------
-// Start the server
-// -----------------------------------
-const PORT = process.env.PORT || 3000;
+// -------------------------------------
+// Start the Server - Listening on the Correct Port
+// -------------------------------------
+const PORT = process.env.PORT || 3000;  // Use PORT assigned by Render, fallback to 3000 for local dev
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
