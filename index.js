@@ -10,7 +10,6 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();  // Firestore instance
-
 const app = express();
 
 // Middleware
@@ -18,11 +17,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));  // Ensure views folder is correct
 app.use(express.static(path.join(__dirname, 'public')));  // Serve static files (CSS, images, etc.)
-
-// Health check route for Render
-app.get('/health', (req, res) => {
-  res.status(200).send('OK');  // Health check response
-});
 
 // Define the services and their fields
 const services = {
@@ -54,23 +48,18 @@ app.get('/', (req, res) => {
 });
 
 // -------------------------------------
-// Route to Display Form for Each Service
+// Route for Patient Registration (/PatientRegistration)
 // -------------------------------------
-app.get('/addData/:service', (req, res) => {
-  const service = req.params.service;
-  const personalNumber = req.query.personalNumber || null;
-  const fields = services[service];
-
-  if (!fields) {
-    return res.status(404).send('Service not found');
-  }
-
-  res.render('form', { service, fields, personalNumber });  // Render form with fields and personal number
+app.get('/PatientRegistration', (req, res) => {
+  const fields = services['PatientRegistration'];
+  res.render('form', { service: 'PatientRegistration', fields, personalNumber: null });
 });
 
 // -------------------------------------
-// Handle Form Submission for Each Service
+// CRUD Routes for All Services
 // -------------------------------------
+
+// Create: Submit Data for Each Service
 app.post('/addData/:service', (req, res) => {
   const service = req.params.service;
   const data = req.body;
@@ -106,6 +95,36 @@ app.post('/addData/:service', (req, res) => {
     })
     .catch((error) => {
       res.status(500).send('Error submitting data: ' + error);
+    });
+});
+
+// Read: Display form for each service
+app.get('/addData/:service', (req, res) => {
+  const service = req.params.service;
+  const personalNumber = req.query.personalNumber || null;
+  const fields = services[service];
+
+  if (!fields) {
+    return res.status(404).send('Service not found');
+  }
+
+  res.render('form', { service, fields, personalNumber });
+});
+
+// Update (if needed): You can implement specific update logic here
+// For simplicity, I'll leave this out unless it's necessary.
+
+// Delete: Delete a record from Firestore
+app.post('/deleteData/:service/:docId', (req, res) => {
+  const service = req.params.service;
+  const docId = req.params.docId;
+
+  db.collection(service).doc(docId).delete()
+    .then(() => {
+      res.send(`Record with ID ${docId} deleted from ${service}`);
+    })
+    .catch((error) => {
+      res.status(500).send('Error deleting data: ' + error);
     });
 });
 
