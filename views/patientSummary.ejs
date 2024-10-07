@@ -4,27 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Patient Summary</title>
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles.css">  <!-- Link to static CSS -->
 </head>
 <body>
-  <div class="container">
-    <h1>Patient Summary</h1>
-    <p>Thank you! You have successfully registered the patient and entered all required data for the services.</p>
-    
-    <h2>Patient Information:</h2>
-    <ul>
-      <li><strong>Personal Number:</strong> <%= patientData.PersonalNumber %></li>
-      <li><strong>First Name:</strong> <%= patientData.FirstName %></li>
-      <li><strong>Last Name:</strong> <%= patientData.LastName %></li>
-      <li><strong>Date of Birth:</strong> <%= patientData.DateOfBirth %></li>
-      <li><strong>Gender:</strong> <%= patientData.Gender %></li>
-      <li><strong>Contact Number:</strong> <%= patientData.ContactNumber %></li>
-      <li><strong>Email:</strong> <%= patientData.Email %></li>
-      <li><strong>Address:</strong> <%= patientData.Address %></li>
-      <!-- Add other fields as necessary -->
-    </ul>
+  <h1>Patient Summary</h1>
 
-    <a href="/">Return to Home</a>
-  </div>
+  <h2>Patient Information</h2>
+  <ul>
+    <li><strong>Personal Number:</strong> <%= personalNumber %></li>
+    <li><strong>First Name:</strong> <%= patientData.FirstName %></li>
+    <li><strong>Last Name:</strong> <%= patientData.LastName %></li>
+    <li><strong>Date of Birth:</strong> <%= patientData.DateOfBirth %></li>
+    <li><strong>Gender:</strong> <%= patientData.Gender %></li>
+    <li><strong>Contact Number:</strong> <%= patientData.ContactNumber %></li>
+    <!-- Add other fields as necessary -->
+  </ul>
+
+  <h3>Other Health Services Data</h3>
+  <p>(Extend this to show summaries from other services)</p>
+
+  <a href="/">Go Back to Home</a>
 </body>
 </html>

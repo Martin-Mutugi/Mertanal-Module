@@ -21,7 +21,7 @@ app.use(express.static(path.join(__dirname, 'public')));  // Serve static files 
 
 // Health check route for Render
 app.get('/health', (req, res) => {
-  res.status(200).send('OK');  // Health check response for Render
+  res.status(200).send('OK');  // Health check response
 });
 
 // Define the services and their fields
@@ -86,7 +86,13 @@ app.post('/addData/:service', (req, res) => {
   // Store data in Firestore
   db.collection(service).add(data)
     .then(() => {
-      const serviceOrder = Object.keys(services);  // Get the order of services
+      const serviceOrder = [
+        'MidwifeNotes', 'LaborProgressChart', 'DeliverySummary', 'LabResults', 'UltrasoundSummary',
+        'DischargeSummary', 'MaternityReport', 'FollowUpNotes', 'PrenatalCheckup', 'RoutineBloodTestResults',
+        'FollowUpBloodTestResults', 'Ultrasound', 'PregnancyOverview', 'DeliveryInformation',
+        'PostpartumHealthCheck', 'MaternalHealthSummary', 'InfantHealthStatus'
+      ];
+
       const currentIndex = serviceOrder.indexOf(service);
       const nextService = serviceOrder[currentIndex + 1];
 
