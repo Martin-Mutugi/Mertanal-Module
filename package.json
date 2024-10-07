@@ -1,9 +1,9 @@
 {
-  "name": "medical_forms_project",
+  "name": "maternal_health_module",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"  
+    "start": "node index.js"
   },
   "dependencies": {
     "body-parser": "^1.20.3",
@@ -12,6 +12,6 @@
     "firebase-admin": "^12.6.0"
   },
   "engines": {
-    "node": "18.x"  
+    "node": "18.x"
   }
 }
