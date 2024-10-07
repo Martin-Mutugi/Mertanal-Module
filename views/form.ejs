@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= service %> Form</title>
+  <!-- Use 'service' instead of 'table' for the title -->
+  <title>Submit Data for <%= service.replace(/([A-Z])/g, ' $1').trim() %></title>
   <link rel="stylesheet" href="/styles.css">  <!-- Link to static CSS -->
 </head>
 <body>
