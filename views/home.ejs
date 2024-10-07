@@ -3,94 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Our Hospital</title>
-  <link rel="stylesheet" href="/styles.css"> <!-- Link to your CSS file -->
+  <title>Maternal Health Monitoring System</title>
+  <link rel="stylesheet" href="/styles.css">
 </head>
-<style>/* General body styling */
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #e3f2fd;
-    padding: 20px;
-    margin: 0;
-  }
-  
-  /* Heading styling */
-  h1 {
-    text-align: center;
-    color: #004d99;
-    margin-bottom: 30px;
-  }
-  
-  /* Grid container for homepage */
-  .grid-container {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr); /* Create 5 equal columns */
-    gap: 15px; /* Space between grid items */
-    max-width: 1000px;
-    margin: 0 auto;
-  }
-  
-  /* Header for the grid */
-  .grid-header {
-    font-weight: bold;
-    text-align: center;
-    background-color: #007bff;
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-  }
-  
-  /* Each grid item */
-  .grid-item {
-    text-align: center;
-    padding: 15px;
-    background-color: #f8f9fa;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add slight shadow to grid items */
-    font-size: 16px;
-  }
-  
-  /* Link styling */
-  a {
-    text-decoration: none;
-    color: #007bff;
-    font-size: 16px;
-  }
-  
-  a:hover {
-    color: #0056b3;
-    text-decoration: underline;
-  }
-  
-  /* Adjust grid item height for consistency */
-  .grid-item {
-    min-height: 50px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  </style>
-<body >
-  <h1>Welcome to Our Hospital</h1>
-
-  <!-- Container for the grid layout -->
-  <div class="grid-container">
-    <!-- Table Headers (Service, Create, Read, Update, Delete) -->
-    <div class="grid-header">Service</div>
-    <div class="grid-header">Create</div>
-    <div class="grid-header">Read</div>
-    <div class="grid-header">Update</div>
-    <div class="grid-header">Delete</div>
-
-    <!-- Loop through the tables to display links for each table in a row -->
-    <% tables.forEach(function(table) { %>
-      <div class="grid-item"><%= table.replace('table', 'Table ') %></div> <!-- Service -->
-      <div class="grid-item"><a href="/<%= table %>">Add New Entry</a></div> <!-- Create -->
-      <div class="grid-item"><a href="/view/<%= table %>">View Data</a></div> <!-- Read -->
-      <div class="grid-item"><a href="/edit/<%= table %>">Update Entry</a></div> <!-- Update -->
-      <div class="grid-item"><a href="/delete/<%= table %>">Delete Entry</a></div> <!-- Delete -->
-    <% }) %>
+<body>
+  <div class="container">
+    <h1>Maternal Health Monitoring System</h1>
+    
+    <h2>Services</h2>
+    <ul>
+      <li><a href="/PatientRegistration">Register New Patient</a></li>
+      <li><a href="/view/PatientRegistration">View Patient Registrations</a></li>
+      <!-- Add other services here if needed -->
+    </ul>
   </div>
 </body>
 </html>

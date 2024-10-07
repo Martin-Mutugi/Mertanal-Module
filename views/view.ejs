@@ -1,21 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Data for <%= table %></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data for <%= table %></title>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <h1>Data from <%= table.replace('table', 'Table ') %></h1>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>Services</h2>
+            <ul>
+                <% tables.forEach(function(service) { %>
+                    <li><a href="/view/<%= service %>"><%= service %></a></li>
+                <% }) %>
+            </ul>
+        </aside>
 
-  <ul>
-    <% data.forEach(function(entry) { %>
-      <li>
-        <pre><%= JSON.stringify(entry, null, 2) %></pre>
-        <a href="/edit/<%= table %>/<%= entry.id %>">Edit</a> |
-        <a href="/delete/<%= table %>/<%= entry.id %>">Delete</a>
-      </li>
-    <% }) %>
-  </ul>
+        <!-- Main content -->
+        <main class="content">
+            <h1>Data from <%= table %></h1>
+
+            <!-- Search Bar -->
+            <form action="/search/<%= table %>" method="GET" class="search-bar">
+                <input type="text" name="search" placeholder="Search by Personal Number or Name..." required>
+                <button type="submit">Search</button>
+            </form>
+
+            <!-- Display each patient record in form format -->
+            <% data.forEach(function(patient) { %>
+                <form action="/edit/<%= table %>/<%= patient.id %>" method="GET" class="patient-form">
+                    <table class="form-table">
+                        <% Object.keys(patient).forEach(function(field) { if (field !== 'id') { %>
+                            <tr>
+                                <td><label for="<%= field %>"><%= field.replace(/([A-Z])/g, ' $1').toUpperCase() %>:</label></td>
+                                <td><input type="text" name="<%= field %>" value="<%= patient[field] %>" readonly></td>
+                            </tr>
+                        <% }}); %>
+                    </table>
+                    <button type="submit">Edit</button>
+                </form>
+                <a href="/delete/<%= table %>/<%= patient.id %>" class="delete-btn">Delete</a>
+                <hr>
+            <% }) %>
+        </main>
+    </div>
 </body>
 </html>

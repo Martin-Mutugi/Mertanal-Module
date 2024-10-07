@@ -1,58 +1,244 @@
-/* Form table styling */
-table.form-table {
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  border-collapse: collapse;
-  background-color: #ffffff;
-  border: 1px solid #ddd;
-  padding: 20px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+/* General styling for the entire page */
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f0f8ff; /* Light blue background for a soothing hospital theme */
+  margin: 0;
+  padding: 0;
+  color: #333;
 }
 
-/* Table row spacing for form */
+/* Main container for layout */
+.container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Styling for the sidebar navigation */
+.sidebar {
+  width: 250px;
+  background-color: #004d99; /* Calm blue for medical-related styling */
+  color: white;
+  padding: 20px;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  overflow-y: auto;
+}
+
+.sidebar h2 {
+  color: #fff;
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  margin: 15px 0;
+}
+
+.sidebar ul li a {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 16px;
+  padding: 10px 15px;
+  display: block;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar ul li a:hover {
+  background-color: #005f99; /* Highlight the link when hovered */
+}
+
+/* Main content area */
+.content {
+  margin-left: 270px;
+  padding: 30px;
+  background-color: white;
+  flex-grow: 1;
+}
+
+h1 {
+  font-size: 24px;
+  color: #004d99;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Styling for forms and tables */
+form {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+table.form-table {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+}
+
 table.form-table tr {
   margin-bottom: 15px;
 }
 
-/* Label styling for form fields */
 table.form-table td label {
   font-weight: bold;
-  color: #333;
-  text-align: right;
-  padding-right: 15px;
-  font-size: 16px;
+  color: #004d99;
 }
 
-/* Input field styling in the form */
+table.form-table td {
+  padding: 10px;
+}
+
 table.form-table td input {
   width: 100%;
   padding: 10px;
-  font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
 }
 
-/* Submit button styling for forms */
-table.form-table button {
-  width: 100%;
-  padding: 10px;
-  background-color: #007bff;
+/* Buttons */
+button {
+  background-color: #007BFF;
   color: white;
-  font-size: 16px;
   border: none;
-  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
   cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
-table.form-table button:hover {
+button:hover {
   background-color: #0056b3;
 }
 
-/* Spacing between form rows */
-table.form-table tr td {
+/* Specific styling for delete buttons */
+.delete-btn {
+  color: #ff4d4d;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.delete-btn:hover {
+  color: darkred;
+}
+
+/* Styling for search bar */
+.search-bar {
+  margin: 20px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.search-bar input {
   padding: 10px;
-  vertical-align: middle;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 300px;
+  margin-right: 10px;
+  font-size: 14px;
+}
+
+.search-bar button {
+  padding: 10px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.search-bar button:hover {
+  background-color: #218838;
+}
+
+/* Table layout for patient data (on view pages) */
+.patient-form {
+  background-color: #f9f9f9;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  max-width: 700px;
+  margin: 20px auto;
+}
+
+.patient-form table {
+  width: 100%;
+  border-spacing: 0;
+}
+
+.patient-form table td {
+  padding: 10px 5px;
+}
+
+.patient-form label {
+  font-weight: bold;
+  color: #004d99;
+}
+
+.patient-form input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.patient-form button {
+  margin-top: 20px;
+  background-color: #28a745; /* Green button for updates */
+}
+
+.patient-form button:hover {
+  background-color: #218838;
+}
+
+/* Button for Edit and Update */
+button.update-btn {
+  background-color: #ffc107;
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button.update-btn:hover {
+  background-color: #e0a800;
+}
+
+/* HR separator for better visual hierarchy */
+hr {
+  border: 0;
+  height: 1px;
+  background-color: #ccc;
+  margin: 30px 0;
+}
+
+/* Footer for branding or additional info */
+footer {
+  background-color: #004d99;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  font-size: 14px;
+}
+
+footer p {
+  margin: 0;
 }

@@ -1,14 +1,25 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const db = require('./firebase'); // Firebase setup
+const path = require('path'); // Required for serving static files and views
+const admin = require('firebase-admin');
+
+// Initialize Firebase Admin SDK
+admin.initializeApp({
+  credential: admin.credential.applicationDefault(), // Automatically uses Render's environment for Firebase credentials
+  databaseURL: process.env.FIREBASE_DB_URL // Make sure to set this environment variable in Render
+});
+
+const db = admin.firestore(); // Use Firestore as the database
 
 const app = express();
+
+// Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
-app.set('views', './views');
-app.use(express.static('public'));
+app.set('views', path.join(__dirname, 'views')); // Use absolute paths to avoid issues
+app.use(express.static(path.join(__dirname, 'public'))); // Serve static files (CSS, JS, etc.)
 
-// Define the tables and fields for each
+// Define the tables and fields for each service
 const tableFields = {
   'PatientRegistration': ['PersonalNumber', 'FirstName', 'LastName', 'DateOfBirth', 'Gender', 'ContactNumber', 'Email', 'Address', 'Allergies', 'PreviousConditions', 'InsuranceProvider', 'InsuranceNumber', 'EmergencyContact', 'EmergencyContactNo', 'BloodGroup'],
   'MidwifeNotes': ['Time', 'MidwifeNote', 'DayNote', 'Discharge', 'MaternityReport'],
@@ -31,109 +42,133 @@ const tableFields = {
 };
 
 // -----------------------------------
-// Homepage displaying all tables
+// Root route to display the homepage
 // -----------------------------------
 app.get('/', (req, res) => {
-  const tables = Object.keys(tableFields); // Get all table names
-  res.render('home', { tables }); // Render the homepage with the list of tables
+  res.render('home');  // Renders the 'home.ejs' template
 });
 
 // -----------------------------------
-// CREATE ROUTE: Render form based on table
+// Route to display the Patient Registration form
 // -----------------------------------
-app.get('/:table', (req, res) => {
+app.get('/PatientRegistration', (req, res) => {
+  const fields = tableFields['PatientRegistration'];
+  res.render('form', { table: 'PatientRegistration', fields, personalNumber: null, tables: Object.keys(tableFields) });
+});
+
+// -----------------------------------
+// Handle form submissions for Patient Registration
+// -----------------------------------
+app.post('/PatientRegistration', (req, res) => {
+  const data = req.body;
+  const personalNumber = data.PersonalNumber;  // Capture Personal Number from the form
+
+  // Check if Personal Number is provided
+  if (!personalNumber) {
+    return res.status(400).send('Personal Number is required');
+  }
+
+  // Store the patient registration data in Firebase
+  db.collection('PatientRegistration').add(data)
+    .then(() => {
+      // Redirect to the first service form (Midwife Notes), passing Personal Number in the query string
+      res.redirect(`/addData/MidwifeNotes?personalNumber=${personalNumber}`);
+    })
+    .catch((error) => {
+      console.error('Error submitting patient data:', error);
+      res.send('Error submitting patient data: ' + error);
+    });
+});
+
+// -----------------------------------
+// Render form for each service, with Personal Number prefilled
+// -----------------------------------
+app.get('/addData/:table', (req, res) => {
   const table = req.params.table;
+  const personalNumber = req.query.personalNumber || null; // Personal Number will be passed in query string
   const fields = tableFields[table];
 
   if (!fields) {
     return res.status(404).send('Table not found');
   }
 
-  // Render form for this table
-  res.render('form', { table, fields });
+  // Render the form, passing personalNumber
+  res.render('form', { table, fields, personalNumber, tables: Object.keys(tableFields) });
 });
 
 // -----------------------------------
-// CREATE ROUTE: Handle form submissions
+// Handle form submissions for each service, linking to the patient by Personal Number
 // -----------------------------------
-app.post('/:table', (req, res) => {
+app.post('/addData/:table', (req, res) => {
   const table = req.params.table;
   const data = req.body;
+  const personalNumber = req.body.personalNumber || req.query.personalNumber || null;
 
-  db.collection(table).add(data)
-    .then(() => res.send("Data submitted successfully!"))
-    .catch(error => res.send("Error submitting data: " + error));
-});
-
-// -----------------------------------
-// READ ROUTE: View all entries for a specific table
-// -----------------------------------
-app.get('/view/:table', async (req, res) => {
-  const table = req.params.table;
-
-  try {
-    const snapshot = await db.collection(table).get();
-    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.render('view', { table, data });
-  } catch (error) {
-    res.status(500).send('Error retrieving data: ' + error.message);
+  // Check if Personal Number is provided
+  if (!personalNumber) {
+    return res.status(400).send('Missing Personal Number');
   }
+
+  // Add Personal Number to the data object
+  data.personalNumber = personalNumber;
+
+  // Store the service data in Firebase
+  db.collection(table).add(data)
+    .then(() => {
+      const serviceOrder = [
+        'MidwifeNotes', 'LaborProgressChart', 'DeliverySummary', 'LabResults', 'UltrasoundSummary',
+        'DischargeSummary', 'MaternityReport', 'FollowUpNotes', 'PrenatalCheckup', 'RoutineBloodTestResults',
+        'FollowUpBloodTestResults', 'Ultrasound', 'PregnancyOverview', 'DeliveryInformation',
+        'PostpartumHealthCheck', 'MaternalHealthSummary', 'InfantHealthStatus'
+      ];
+
+      const nextServiceIndex = serviceOrder.indexOf(table) + 1;
+
+      // If there are more services, redirect to the next one
+      if (nextServiceIndex < serviceOrder.length) {
+        const nextService = serviceOrder[nextServiceIndex];
+        res.redirect(`/addData/${nextService}?personalNumber=${personalNumber}`);
+      } else {
+        // If no more services, redirect to the patient summary page
+        res.redirect(`/patientSummary/${personalNumber}`);
+      }
+    })
+    .catch((error) => {
+      res.send('Error submitting data: ' + error);
+    });
 });
 
 // -----------------------------------
-// EDIT ROUTE: Get a specific entry to edit (GET /edit)
+// Route to show patient summary after completing all forms
 // -----------------------------------
-app.get('/edit/:table/:id', async (req, res) => {
-  const table = req.params.table;
-  const id = req.params.id;
+app.get('/patientSummary/:personalNumber', async (req, res) => {
+  const personalNumber = req.params.personalNumber;
+
+  if (!personalNumber || personalNumber === 'null') {
+    return res.status(400).send('Invalid Personal Number');
+  }
 
   try {
-    const doc = await db.collection(table).doc(id).get();
+    // Fetch patient registration data using Personal Number
+    const snapshot = await db.collection('PatientRegistration').where('PersonalNumber', '==', personalNumber).get();
 
-    if (!doc.exists) {
-      return res.status(404).send('Document not found');
+    if (snapshot.empty) {
+      return res.status(404).send('Patient not found');
     }
 
-    res.render('edit', { table, id, data: doc.data() });
+    const patientData = snapshot.docs[0].data();
+
+    // Render the summary page with patient data
+    res.render('patientSummary', { personalNumber, patientData });
   } catch (error) {
-    res.status(500).send('Error retrieving data: ' + error.message);
-  }
-});
-
-// -----------------------------------
-// UPDATE ROUTE: Handle form submission for editing (POST /edit)
-// -----------------------------------
-app.post('/edit/:table/:id', async (req, res) => {
-  const table = req.params.table;
-  const id = req.params.id;
-  const updatedData = req.body;
-
-  try {
-    await db.collection(table).doc(id).update(updatedData);
-    res.redirect(`/view/${table}`);
-  } catch (error) {
-    res.status(500).send('Error updating data: ' + error.message);
-  }
-});
-
-// -----------------------------------
-// DELETE ROUTE: Handle deleting an entry (GET /delete)
-// -----------------------------------
-app.get('/delete/:table/:id', async (req, res) => {
-  const table = req.params.table;
-  const id = req.params.id;
-
-  try {
-    await db.collection(table).doc(id).delete();
-    res.redirect(`/view/${table}`);
-  } catch (error) {
-    res.status(500).send('Error deleting document: ' + error.message);
+    res.status(500).send('Error retrieving patient data: ' + error.message);
   }
 });
 
 // -----------------------------------
 // Start the server
 // -----------------------------------
-app.listen(3000, () => {
-  console.log("Server is running on port 3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });

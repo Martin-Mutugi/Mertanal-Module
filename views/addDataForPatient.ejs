@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Data for Patient</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h2>Services</h2>
+      <ul>
+        <% tables.forEach(function(table) { %>
+          <li><a href="/addData/<%= table %>?patientId=<%= patientId %>">Add Data to <%= table.replace('table', '').replace(/([A-Z])/g, ' $1').trim() %></a></li>
+        <% }) %>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content">
+      <h1>Add Data for Patient</h1>
+      <p>Select a service below to add data for the patient:</p>
+
+      <ul>
+        <% tables.forEach(function(table) { %>
+          <li><a href="/addData/<%= table %>?patientId=<%= patientId %>">Add Data to <%= table.replace('table', '').replace(/([A-Z])/g, ' $1').trim() %></a></li>
+        <% }) %>
+      </ul>
+    </main>
+  </div>
+</body>
+</html>

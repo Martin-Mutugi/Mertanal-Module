@@ -3,30 +3,65 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Submit Data to <%= table.replace('table', ' ') %></title>
-  <link rel="stylesheet" href="/styles.css"> <!-- Link to your CSS file -->
+  <title>Submit Data for <%= table.replace(/([A-Z])/g, ' $1').trim() %></title>
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <h1>Submit Data to <%= table.replace('table', ' ') %></h1>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h2>Services</h2>
+      <ul>
+        <% tables.forEach(function(service) { %>
+          <li><a href="/view/<%= service %>"><%= service.replace('table', '').replace(/([A-Z])/g, ' $1').trim() %></a></li>
+        <% }) %>
+      </ul>
+    </aside>
 
-  <!-- Form starts here -->
-  <form action="/<%= table %>" method="POST">
-    <table class="form-table">
-      <% fields.forEach(function(field) { %>
-        <tr>
-          <!-- Display the label for each field -->
-          <td><label for="<%= field %>"><%= field.replace(/([A-Z])/g, ' $1').toUpperCase() %>:</label></td>
-          
-          <!-- Display the corresponding input field -->
-          <td><input type="text" id="<%= field %>" name="<%= field %>" placeholder="Enter <%= field.replace(/([A-Z])/g, ' $1') %>" required></td>
-        </tr>
-      <% }) %>
-      <tr>
-        <td colspan="2" style="text-align: center;">
+    <!-- Main content -->
+    <main class="content">
+      <h1>Submit Data for <%= table.replace(/([A-Z])/g, ' $1').trim() %></h1>
+
+      <!-- Form for submitting data for the selected service -->
+      <form action="/addData/<%= table %>?personalNumber=<%= personalNumber %>" method="POST" class="patient-form">
+        <!-- Hidden input to store Personal Number -->
+        <% if (table === 'PatientRegistration') { %>
+          <!-- Personal Number for Patient Registration -->
+          <table class="form-table">
+            <tr>
+              <td><label for="PersonalNumber">PERSONAL NUMBER:</label></td>
+              <td><input type="text" id="PersonalNumber" name="PersonalNumber" placeholder="Enter Personal Number" required></td>
+            </tr>
+            <!-- Other patient registration fields -->
+            <tr>
+              <td><label for="FirstName">FIRST NAME:</label></td>
+              <td><input type="text" id="FirstName" name="FirstName" placeholder="Enter First Name" required></td>
+            </tr>
+            <tr>
+              <td><label for="LastName">LAST NAME:</label></td>
+              <td><input type="text" id="LastName" name="LastName" placeholder="Enter Last Name" required></td>
+            </tr>
+            <!-- Additional fields can be added here -->
+          </table>
+        <% } else { %>
+          <!-- Other service forms with hidden Personal Number -->
+          <input type="hidden" name="personalNumber" value="<%= personalNumber %>">
+          <table class="form-table">
+            <% fields.forEach(function(field) { %>
+              <tr>
+                <td><label for="<%= field %>"><%= field.replace(/([A-Z])/g, ' $1').toUpperCase() %>:</label></td>
+                <td><input type="text" id="<%= field %>" name="<%= field %>" placeholder="Enter <%= field %>" required></td>
+              </tr>
+            <% }) %>
+          </table>
+        <% } %>
+
+        <!-- Submit button -->
+        <div style="text-align: center; margin-top: 20px;">
           <button type="submit">Submit</button>
-        </td>
-      </tr>
-    </table>
-  </form>
+        </div>
+      </form>
+    </main>
+  </div>
 </body>
 </html>
