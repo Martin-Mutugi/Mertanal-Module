@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const admin = require('firebase-admin');
 
-// Initialize Firebase Admin SDK using environment variables
+// Initialize Firebase Admin SDK
 admin.initializeApp({
   credential: admin.credential.applicationDefault(),  // Uses GOOGLE_APPLICATION_CREDENTIALS
   databaseURL: process.env.FIREBASE_DB_URL  // Firebase Realtime Database URL
@@ -15,10 +15,10 @@ const app = express();
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));  // Ensure views folder is correct
+app.set('views', path.join(__dirname, 'views'));  // Set views directory
 app.use(express.static(path.join(__dirname, 'public')));  // Serve static files (CSS, images, etc.)
 
-// Define the services and their fields
+// Define services and fields
 const services = {
   'PatientRegistration': ['PersonalNumber', 'FirstName', 'LastName', 'DateOfBirth', 'Gender', 'ContactNumber', 'Email', 'Address', 'Allergies', 'PreviousConditions', 'InsuranceProvider', 'InsuranceNumber', 'EmergencyContact', 'EmergencyContactNo', 'BloodGroup'],
   'MidwifeNotes': ['Time', 'MidwifeNote', 'DayNote', 'Discharge', 'MaternityReport'],
@@ -40,39 +40,53 @@ const services = {
   'InfantHealthStatus': ['BirthWeight', 'HeadCircumference', 'ApgarScore', 'BirthStatus', 'Breastfeeding', 'FollowUp']
 };
 
-// -------------------------------------
-// Root Route - Display Homepage
-// -------------------------------------
+// Home Route
 app.get('/', (req, res) => {
-  res.render('home');  // Renders 'home.ejs' for the homepage
+  res.render('home');  // Render homepage
 });
 
-// -------------------------------------
-// Route for Patient Registration (/PatientRegistration)
-// -------------------------------------
+// Route for Patient Registration
 app.get('/PatientRegistration', (req, res) => {
   const fields = services['PatientRegistration'];
   res.render('form', { service: 'PatientRegistration', fields, personalNumber: null });
 });
 
-// -------------------------------------
-// CRUD Routes for All Services
-// -------------------------------------
+// Handle Patient Registration Form Submission
+app.post('/addData/PatientRegistration', (req, res) => {
+  const data = req.body;
+  const personalNumber = data.PersonalNumber;
 
-// Create: Submit Data for Each Service
+  // Validate Personal Number
+  if (!personalNumber) {
+    return res.status(400).send('Missing Personal Number');
+  }
+
+  // Store patient registration data in Firestore
+  db.collection('PatientRegistration').add(data)
+    .then(() => {
+      // Redirect to MidwifeNotes service form
+      res.redirect(`/addData/MidwifeNotes?personalNumber=${personalNumber}`);
+    })
+    .catch(error => {
+      console.error('Error adding Patient Registration:', error);
+      res.status(500).send('Error adding patient registration: ' + error);
+    });
+});
+
+// Handle Form Submission for Each Service
 app.post('/addData/:service', (req, res) => {
   const service = req.params.service;
   const data = req.body;
-  const personalNumber = data.personalNumber || req.query.personalNumber;
+  const personalNumber = req.body.personalNumber || req.query.personalNumber;
 
   if (!personalNumber) {
     return res.status(400).send('Missing Personal Number');
   }
 
-  // Add personal number to the data object
+  // Add personalNumber to the data object
   data.personalNumber = personalNumber;
 
-  // Store data in Firestore
+  // Store the data in Firestore
   db.collection(service).add(data)
     .then(() => {
       const serviceOrder = [
@@ -85,20 +99,19 @@ app.post('/addData/:service', (req, res) => {
       const currentIndex = serviceOrder.indexOf(service);
       const nextService = serviceOrder[currentIndex + 1];
 
+      // Redirect to next service or patient summary
       if (nextService) {
-        // Redirect to next service in the order
         res.redirect(`/addData/${nextService}?personalNumber=${personalNumber}`);
       } else {
-        // If no more services, redirect to patient summary
         res.redirect(`/patientSummary/${personalNumber}`);
       }
     })
-    .catch((error) => {
+    .catch(error => {
       res.status(500).send('Error submitting data: ' + error);
     });
 });
 
-// Read: Display form for each service
+// Render Form for Each Service
 app.get('/addData/:service', (req, res) => {
   const service = req.params.service;
   const personalNumber = req.query.personalNumber || null;
@@ -111,10 +124,24 @@ app.get('/addData/:service', (req, res) => {
   res.render('form', { service, fields, personalNumber });
 });
 
-// Update (if needed): You can implement specific update logic here
-// For simplicity, I'll leave this out unless it's necessary.
+// CRUD Routes
 
-// Delete: Delete a record from Firestore
+// Read (Fetch Data)
+app.get('/viewData/:service/:personalNumber', async (req, res) => {
+  const service = req.params.service;
+  const personalNumber = req.params.personalNumber;
+
+  try {
+    const snapshot = await db.collection(service).where('personalNumber', '==', personalNumber).get();
+    const records = snapshot.docs.map(doc => doc.data());
+
+    res.render('viewData', { service, records });
+  } catch (error) {
+    res.status(500).send('Error fetching data: ' + error);
+  }
+});
+
+// Delete
 app.post('/deleteData/:service/:docId', (req, res) => {
   const service = req.params.service;
   const docId = req.params.docId;
@@ -123,14 +150,12 @@ app.post('/deleteData/:service/:docId', (req, res) => {
     .then(() => {
       res.send(`Record with ID ${docId} deleted from ${service}`);
     })
-    .catch((error) => {
+    .catch(error => {
       res.status(500).send('Error deleting data: ' + error);
     });
 });
 
-// -------------------------------------
-// Patient Summary Route - After All Forms Completed
-// -------------------------------------
+// Patient Summary Route
 app.get('/patientSummary/:personalNumber', async (req, res) => {
   const personalNumber = req.params.personalNumber;
 
@@ -139,26 +164,21 @@ app.get('/patientSummary/:personalNumber', async (req, res) => {
   }
 
   try {
-    // Fetch patient registration data using Personal Number
+    // Fetch Patient Registration Data
     const snapshot = await db.collection('PatientRegistration').where('PersonalNumber', '==', personalNumber).get();
-
     if (snapshot.empty) {
       return res.status(404).send('Patient not found');
     }
 
     const patientData = snapshot.docs[0].data();
-
-    // Render the summary page with patient data
     res.render('patientSummary', { personalNumber, patientData });
   } catch (error) {
     res.status(500).send('Error retrieving patient data: ' + error.message);
   }
 });
 
-// -------------------------------------
-// Start the Server - Listening on the Correct Port
-// -------------------------------------
-const PORT = process.env.PORT || 3000;  // Use PORT assigned by Render, fallback to 3000 for local dev
+// Start Server
+const PORT = process.env.PORT || 3000;  // Use PORT assigned by Render
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
